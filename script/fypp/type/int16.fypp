@@ -1,0 +1,72 @@
+#:include "../common.fypp"
+#:set int_kind="int16"
+module store_intrinsic_${int_kind}$
+    use, intrinsic :: iso_fortran_env
+    implicit none
+    private
+    public :: store
+    public :: store_a
+
+    interface store
+        procedure :: store_${int_kind}$
+        #:for rank in RANKS
+        procedure :: store_${int_kind}$_rank${rank}$
+        #:endfor
+    end interface
+
+    interface store_a
+        procedure :: store_${int_kind}$_a
+        #:for rank in RANKS
+        procedure :: store_${int_kind}$_rank${rank}$_a
+        #:endfor
+    end interface
+contains
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${int_kind}$(var, value)
+        implicit none
+        integer(${int_kind}$), intent(out), optional :: var
+        integer(${int_kind}$), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${int_kind}$
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${int_kind}$_rank${rank}$(var, value)
+        implicit none
+        integer(${int_kind}$), intent(out), optional :: var${rank_suffix(rank)}$
+        integer(${int_kind}$), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${int_kind}$_rank${rank}$
+
+    #:endfor
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${int_kind}$_a(var, value)
+        implicit none
+        integer(${int_kind}$), allocatable, intent(out), optional :: var
+        integer(${int_kind}$), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${int_kind}$_a
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${int_kind}$_rank${rank}$_a(var, value)
+        implicit none
+        integer(${int_kind}$), allocatable, intent(out), optional :: var${rank_suffix(rank)}$
+        integer(${int_kind}$), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${int_kind}$_rank${rank}$_a
+
+    #:endfor
+end module store_intrinsic_${int_kind}$

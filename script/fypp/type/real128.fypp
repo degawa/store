@@ -1,0 +1,74 @@
+#:include "../common.fypp"
+#:set real_kind="real128"
+module store_intrinsic_${real_kind}$
+    use, intrinsic :: iso_fortran_env
+    implicit none
+    private
+#if defined(__GFORTRAN__) || defined(__INTEL_COMPILER) || defined(NAGFOR)
+    public :: store
+    public :: store_a
+
+    interface store
+        procedure :: store_${real_kind}$
+        #:for rank in RANKS
+        procedure :: store_${real_kind}$_rank${rank}$
+        #:endfor
+    end interface
+
+    interface store_a
+        procedure :: store_${real_kind}$_a
+        #:for rank in RANKS
+        procedure :: store_${real_kind}$_rank${rank}$_a
+        #:endfor
+    end interface
+contains
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${real_kind}$(var, value)
+        implicit none
+        real(${real_kind}$), intent(out), optional :: var
+        real(${real_kind}$), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${real_kind}$
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${real_kind}$_rank${rank}$(var, value)
+        implicit none
+        real(${real_kind}$), intent(out), optional :: var${rank_suffix(rank)}$
+        real(${real_kind}$), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${real_kind}$_rank${rank}$
+
+    #:endfor
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${real_kind}$_a(var, value)
+        implicit none
+        real(${real_kind}$), allocatable, intent(out), optional :: var
+        real(${real_kind}$), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${real_kind}$_a
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_${real_kind}$_rank${rank}$_a(var, value)
+        implicit none
+        real(${real_kind}$), allocatable, intent(out), optional :: var${rank_suffix(rank)}$
+        real(${real_kind}$), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_${real_kind}$_rank${rank}$_a
+
+    #:endfor
+#endif
+end module store_intrinsic_${real_kind}$

@@ -1,0 +1,263 @@
+#:mute
+
+#!-------------------------------------------------------------------
+#! number of bits of integer type
+#:set INTEGER_BITS = [8, 16, 32, 64]
+
+#! number of bytes of integer type
+#:set INTEGER_BYTES = [1, 2, 4 , 8]
+
+#! integer kinds
+#:set INTEGER_KINDS = ["int{}".format(bits) for bits in INTEGER_BITS]
+
+#! integer types
+#:set INTEGER_TYPES = ["integer({})".format(kind) for kind in INTEGER_KINDS]
+
+#! (kind, type) tuple for integer
+#:set INTEGER_KINDS_TYPES = list(zip(INTEGER_KINDS, INTEGER_TYPES))
+
+#! (kind, bytes) tuple for integer
+#:set INTEGER_KINDS_BYTES = list(zip(INTEGER_KINDS, INTEGER_BYTES))
+
+#!-------------------------------------------------------------------
+#! nubmer of bits of real type
+#:set REAL_BITS = [32, 64]
+
+#! nubmer of bytes of real type
+#:set REAL_BYTES = [4, 8]
+
+#! supporting real128
+#:if defined("QP")
+#:set REAL_BITS = REAL_BITS + [128]
+#:set REAL_BYTES = REAL_BYTES + [16]
+#:endif
+
+#! real kinds
+#:set REAL_KINDS = ["real{}".format(bits) for bits in REAL_BITS]
+
+#! real types
+#:set REAL_TYPES = ["real({})".format(kind) for kind in REAL_KINDS]
+
+#! (kind, type) tuple for real
+#:set REAL_KINDS_TYPES = list(zip(REAL_KINDS, REAL_TYPES))
+
+#! (kind, byte) tuple for real
+#:set REAL_KINDS_BYTES = list(zip(REAL_KINDS, REAL_BYTES))
+
+#! (kind, bit) tuple for real
+#:set REAL_KINDS_BITS = list(zip(REAL_KINDS, REAL_BITS))
+
+#!-------------------------------------------------------------------
+#! complex kinds
+#:set COMPLEX_KINDS = ["complex{}".format(bits) for bits in REAL_BITS]
+
+#! complex types
+#! referring to REAL_KINDS, not COMPLEX_KINDS
+#:set COMPLEX_TYPES = ["complex({})".format(kind) for kind in REAL_KINDS]
+
+#! (kind, type) tuple for complex
+#:set COMPLEX_KINDS_TYPES = list(zip(COMPLEX_KINDS, COMPLEX_TYPES))
+
+#! (kind, byte) tuple for complex
+#:set COMPLEX_KINDS_BYTES = list(zip(COMPLEX_KINDS, REAL_BYTES))
+
+#! (kind, bit) tuple for complex
+#:set COMPLEX_KINDS_BITS = list(zip(COMPLEX_KINDS, REAL_BITS))
+
+#!-------------------------------------------------------------------
+#! logical kinds
+#:set LOGICAL_KINDS = ["logical"]
+
+#! logical types
+#:set LOGICAL_TYPES = ["logical"]
+
+#! (kind, type) tuple for logical
+#:set LOGICAL_KINDS_TYPES = list(zip(LOGICAL_KINDS, LOGICAL_TYPES))
+
+#!-------------------------------------------------------------------
+#! character kinds
+#:set CHAR_KINDS = ["char"]
+
+#! character types
+#:set CHAR_TYPES = ["character"]
+
+#! (kind, type) tuple for character
+#:set CHAR_KINDS_TYPES = list(zip(CHAR_KINDS, CHAR_TYPES))
+
+#!-------------------------------------------------------------------
+#! string kinds
+#:set STR_KINDS = ["str"]
+
+#! string types
+#:set STR_TYPES = ["character(*)"]
+
+#! (kind, type) tuple for string
+#:set STR_KINDS_TYPES = list(zip(STR_KINDS, STR_TYPES))
+
+#!-------------------------------------------------------------------
+#! kinds for intrinsic types
+#:set INTRINSIC_KINDS = []
+#:if not defined("NO_INT")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + INTEGER_KINDS
+#:endif
+#:if not defined("NO_REAL")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + REAL_KINDS
+#:endif
+#:if not defined("NO_COMPLEX")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + COMPLEX_KINDS
+#:endif
+#:if not defined("NO_LOGICAL")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + LOGICAL_KINDS
+#:endif
+#:if not defined("NO_STRING") and not defined("RATHER_CHAR")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + STR_KINDS
+#:endif
+#:if not defined("NO_CHAR") and defined("RATHER_CHAR")
+    #:set INTRINSIC_KINDS = INTRINSIC_KINDS + CHAR_KINDS
+#:endif
+
+#! intrinsic types
+#:set INTRINSIC_TYPES = []
+#:if not defined("NO_INT")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + INTEGER_TYPES
+#:endif
+#:if not defined("NO_REAL")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + REAL_TYPES
+#:endif
+#:if not defined("NO_COMPLEX")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + COMPLEX_TYPES
+#:endif
+#:if not defined("NO_LOGICAL")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + LOGICAL_TYPES
+#:endif
+#:if not defined("NO_STRING") and not defined("RATHER_CHAR")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + STR_TYPES
+#:endif
+#:if not defined("NO_CHAR") and defined("RATHER_CHAR")
+    #:set INTRINSIC_TYPES = INTRINSIC_TYPES + CHAR_TYPES
+#:endif
+
+#! (kind, type) tuple for intrinsic type
+#:set INTRINSIC_KINDS_TYPES = list(zip(INTRINSIC_KINDS, INTRINSIC_TYPES))
+
+#!-------------------------------------------------------------------
+#! target array rank
+#:if not defined("MAXRANK")
+    #:set MAXRANK=7
+#:endif
+
+#:if 0<MAXRANK<=15
+    #:set MAX_RANK = MAXRANK
+#:else
+    #:set MAX_RANK = 7
+#:endif
+
+#! rank
+#:set RANKS = [rank for rank in range(1, MAX_RANK+1)]
+
+#!-------------------------------------------------------------------
+#:set ALLOCATABLE_ATTR=[False]
+#:if not defined("AUTO_ONLY")
+#:set ALLOCATABLE_ATTR=ALLOCATABLE_ATTR+[True]
+#:endif
+
+#!-------------------------------------------------------------------
+#! Generate rank suffix such as (:), (:,:)
+#!
+#! Args:
+#!     rank (int): Rank of the variable
+#!
+#! Returns:
+#!     Array rank suffix
+#!
+#! Examples:
+#!      ```Fortran
+#!          #:for rank in range(1, 3+1)
+#!          real(real32), intent(in) :: array${rank_suffix(rank)}$
+#!          #:endfor
+#!
+#!          ! real(real32), intent(in) :: array(:)
+#!          ! real(real32), intent(in) :: array(:,:)
+#!          ! real(real32), intent(in) :: array(:,:,:)
+#!      ```
+#:def rank_suffix(rank)
+#{if rank > 0}#(${":" + ",:" * (rank - 1)}$)#{endif}#
+#:enddef
+
+#!-------------------------------------------------------------------
+#! Generate procedure name suffix
+#!
+#! Args:
+#!     allocatable (logical): A flag that the variable has
+#!                            allocatable attribute
+#!
+#! Returns:
+#!     procedure name suffix "_a" when allocatable == True
+#!     and "" elsewhere.
+#!
+#! Examples:
+#!      ```Fortran
+#!          #:for allocatable in [False, True]
+#!          subroutine store${alloc_suffix(allocatable)}$()
+#!          end subroutine store${alloc_suffix(allocatable)}$
+#!          #:endfor
+#!
+#!          ! subroutine store()
+#!          ! end subroutine store
+#!          ! subroutine store_a()
+#!          ! end subroutine store_alloc
+#!      ```
+#:def alloc_suffix(allocatable)
+#{if allocatable}#_a#{endif}#
+#:enddef
+
+#! Generate allocatable attribute
+#!
+#! Args:
+#!     allocatable (logical): A flag that the intent(out) variable has
+#!                            allocatable attribute
+#!
+#! Returns:
+#!     allocatable attribute ", allocatable" when allocatable == True
+#!     and "" elsewhere.
+#!
+#! Examples:
+#!      ```Fortran
+#!          #:for allocatable in [False, True]
+#!          integer${alloc_attribute(allocatable)}$ :: var
+#!          #:endfor
+#!
+#!          ! integer :: var
+#!          ! integer, allocatable :: var
+#!      ```
+#:def alloc_attribute(allocatable)
+#{if allocatable}#, allocatable#{endif}#
+#:enddef
+
+#! Generate attributable type name
+#!
+#! Args:
+#!     type (string): type name
+#!     allocatable (logical): A flag that the variable has
+#!                            allocatable attribute
+#!
+#! Returns:
+#!     type name with ", allocatable" if allocatable == True.
+#!     "character(:), allocatable" when type name is "character(*)"
+#!     and allocatable == True,
+#!
+#! Examples:
+#!      ```Fortran
+#!          #:for allocatable in [False, True]
+#!          #:for type in STR_TYPES
+#!          ${alloc_type(type, allocatable)}$ :: var
+#!          #:endfor
+#!          #:endfor
+#!
+#!          ! character(*) :: var
+#!          ! character(:), allocatable :: var
+#!      ```
+#:def alloc_type(type, allocatable)
+#{if type=="character(*)" and allocatable}#character(:)#{else}#${type}$#{endif}#${alloc_attribute(allocatable)}$
+#:enddef
+#:endmute

@@ -1,0 +1,71 @@
+#:include "../common.fypp"
+module store_intrinsic_str
+    use, intrinsic :: iso_fortran_env
+    implicit none
+    private
+    public :: store
+    public :: store_a
+
+    interface store
+        procedure :: store_str
+        #:for rank in RANKS
+        procedure :: store_str_rank${rank}$
+        #:endfor
+    end interface
+
+    interface store_a
+        procedure :: store_str_a
+        #:for rank in RANKS
+        procedure :: store_str_rank${rank}$_a
+        #:endfor
+    end interface
+contains
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_str(var, value)
+        implicit none
+        character(*), intent(out), optional :: var
+        character(*), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_str
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_str_rank${rank}$(var, value)
+        implicit none
+        character(*), intent(out), optional :: var${rank_suffix(rank)}$
+        character(*), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_str_rank${rank}$
+
+    #:endfor
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_str_a(var, value)
+        implicit none
+        character(:), allocatable, intent(out), optional :: var
+        character(*), intent(in) :: value
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_str_a
+
+    #:for rank in RANKS
+    !>stores `value` to `var` if `var` is presented.
+    subroutine store_str_rank${rank}$_a(var, value)
+        implicit none
+        character(:), allocatable, intent(out), optional :: var${rank_suffix(rank)}$
+        character(*), intent(in) :: value${rank_suffix(rank)}$
+
+        if (present(var)) then
+            var = value
+        end if
+    end subroutine store_str_rank${rank}$_a
+
+    #:endfor
+end module store_intrinsic_str
